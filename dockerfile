@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./app /app
 
-CMD ["python", "chatbot.py"]
+CMD ["streamlit", "run", "chatbot.py"]

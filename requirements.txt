@@ -1,0 +1,8 @@
+docopt==0.6.2
+ipython==8.12.3
+langchain==0.3.13
+langchain-openai==0.2.14
+nbconvert==7.16.5
+streamlit==1.41.1
+tinycss2==1.4.0
+yarg==0.1.9
