@@ -115,9 +115,12 @@ def predict_specific_date(target_date: str):
 
 
 
-agent = create_sql_agent(model, db = db, agent_type= 'openai-tools', verbose = True)
-# st.markdown(agent_executor.invoke({"input" : "what are you?"}))
+sql_agent = create_sql_agent(model, db = db, agent_type= 'openai-tools', verbose = True)
+prediction_tools = [make_predictions, predict_specific_date]
+prediction_agent = create_react_agent(model, prediction_tools)
 
+tools = [sql_agent,prediction_agent]
+agent = create_react_agent(model, tools)
 
 
 
@@ -126,7 +129,7 @@ agent = create_sql_agent(model, db = db, agent_type= 'openai-tools', verbose = T
 
 def get_response(agent, query, chat_history):
     """
-    Handles interaction with the SQL agent by processing the user's query and incorporating chat history.
+    Handles interaction with the SQL agent and Prediction agent by processing the user's query and incorporating chat history.
 
     Args:
         agent: The LangChain agent_executor instance.
