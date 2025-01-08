@@ -5,22 +5,25 @@ from openai import OpenAIError
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
-from langchain_experimental.agents import create_csv_agent
 from pathlib import Path
 import pandas as pd
 from langchain_community.utilities import SQLDatabase
 from sqlalchemy import create_engine
-from pathlib import Path
 import os
 from langchain_community.agent_toolkits import create_sql_agent
+from datetime import datetime
+from langchain_core.tools import tool
+from langgraph.prebuilt import create_react_agent
+import pickle
 
 
+# Path to the database where train data is stored
 db_path = Path(os.getcwd()) / 'datasets' / "testdb.db"
 db_path = f"sqlite:///{str(db_path)}"
 
+# creating sql agent 
 engine = create_engine(db_path)
 db = SQLDatabase(engine = engine)
-
 
 st.title("Sales Forecasting 📈")
 
@@ -53,10 +56,72 @@ model = ChatOpenAI(
     max_tokens= 2048
 )
 
+# Tool for predicting sales for 'x' number of days from now
+@tool
+def make_predictions(days: int):
+    """
+    Predict sales for the given number of days.
+    """
+    with open('app/model.pkl', 'rb') as f:
+        m = pickle.load(f)
+
+    # today's date
+    date_today = datetime.today()
+
+    # date at which training had stopped
+    end_date = datetime(2024,4,30)
+
+    days_since_end_date = (date_today - end_date).days
+
+    total_pred_days = days_since_end_date + days
+
+    future = m.make_future_dataframe(periods=total_pred_days, freq='D')
+    forecast = m.predict(future)
+    return forecast[['ds', 'yhat']].tail(days).to_dict(orient='records')
+
+# tool for predicting sales on a specific date (has to invoke the model, doesnt work on past data!)
+@tool
+def predict_specific_date(target_date: str):
+    """
+    Predict sales for a specific date.
+    
+    Args:
+        target_date (str): The date to predict sales for, in the format 'YYYY-MM-DD'.
+    
+    Returns:
+        dict: The predicted sales value for the given date.
+    """
+    with open('app/model.pkl', 'rb') as f:
+        m = pickle.load(f)
+
+    # date which we want to predict
+    target_date = datetime.strptime(target_date, '%Y-%m-%d')
+
+    # date at which the training stopped in our model
+    end_date = datetime(2024,4,30)
+
+    if target_date > end_date:
+        prediction_period = (target_date - end_date).days
+    else:
+        return 'Future prediction will not happen on dates before 30th of April'
+    
+    future = m.make_future_dataframe(periods = prediction_period, freq = 'D')
+    forecast = m.predict(future)
+
+    return forecast[['ds', 'yhat']].iloc[-1].to_dict()
+
+
+
+
 
 
 agent = create_sql_agent(model, db = db, agent_type= 'openai-tools', verbose = True)
 # st.markdown(agent_executor.invoke({"input" : "what are you?"}))
+
+
+
+
+
 
 
 def get_response(agent, query, chat_history):
