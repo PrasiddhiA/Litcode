@@ -50,7 +50,7 @@ else:
 
 
 # initializing path to the database
-db_path = Path(os.getcwd()) / 'datasets' / "traindb.db"
+db_path = Path(__file__).parent.parent / 'datasets' / "traindb.db"
 db_path = f"sqlite:///{str(db_path)}"
 
 # creating sql engine
