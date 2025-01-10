@@ -86,7 +86,8 @@ def predict_range(input_data: Union[str,PredictRangeInput]):
         dict: Predicted sales between start and end dates.
     '''
     
-    with open('app/model.pkl', 'rb') as f:
+    file_path = Path(__file__).parent / 'model.pkl'
+    with open(file_path, 'rb') as f:
         m = pickle.load(f)
 
     if isinstance(input_data,str):
@@ -119,7 +120,8 @@ def predict_specific_date(target_date: str):
     Returns:
         dict: The predicted sales value for the given date.
     """
-    with open('app/model.pkl', 'rb') as f:
+    file_path = Path(__file__).parent / 'model.pkl'
+    with open(file_path, 'rb') as f:
         m = pickle.load(f)
 
     # date which we want to predict
