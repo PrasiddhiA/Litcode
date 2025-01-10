@@ -11,6 +11,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt  
 
 COPY ./app /app 
-COPY ./datasets /datasets  
+COPY ./datasets /datasets 
 
-CMD ["streamlit", "run", "app/agent.py"] 
+WORKDIR /app
+
+CMD ["streamlit", "run", "agent.py"] 
